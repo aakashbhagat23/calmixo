@@ -1,43 +1,69 @@
+// app/(tabs)/_layout.tsx
 import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import Colors from '@/constants/Colors';
+import { useColorScheme } from 'react-native';
+import  ProfileHeader  from '@/components/ui/profileHeader';
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function TabsLayout() {
+    const theme =  useColorScheme() || 'light';
+  const backgroundColor = Colors[theme].background;
+  const textColor = Colors[theme].primary;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarShowLabel: false,
         headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
+        tabBarStyle: {
+          height: 70,
+          paddingBottom: 10,
+          paddingTop: 10,
+          backgroundColor: backgroundColor,
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name="home" size={24} color={focused ? textColor : color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="sleep"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name="moon" size={24} color={focused ? textColor : color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="meditate"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name="leaf" size={24} color={focused ? textColor : color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="music"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name="eye" size={24} color={focused ? textColor : color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          tabBarIcon: ({ color, focused }) => (
+            <>
+              {/* <MaterialCommunityIcons name="account" size={24} color={focused ? textColor : color} /> */}
+              <ProfileHeader width={24} height={24} />
+            </>
+          ),
         }}
       />
     </Tabs>

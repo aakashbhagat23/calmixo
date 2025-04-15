@@ -1,74 +1,88 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { ScrollView, StyleSheet, Alert, Text } from 'react-native';
+import { useColorScheme } from 'react-native';
+import { useEffect, useState } from 'react';
+import { fetchAppConfig } from '@/lib/configService';
+import { collection, getDocs } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import HeaderSection from '../../components/home/HeaderSection';
+import CategoryCardList from '../../components/home/CategoryCardList';
+import DailyDoseList from '../../components/home/DailyDoseList';
+import QuoteSection from '../../components/home/QuoteSection';
+import Colors from '@/constants/Colors';
 
 export default function HomeScreen() {
+  const [config, setConfig] = useState<any>(null);
+  const [cards, setCards] = useState<any[]>([]);
+  const [dailyDose, setDailyDose] = useState<any[]>([]);
+  const [quote, setQuote] = useState<any[]>([]);
+  const theme = useColorScheme() || 'light';
+  const backgroundColor = Colors[theme].background;
+  const textColor = Colors[theme].text;
+  const buttonColor = Colors[theme].primary;
+  const displayName = auth.currentUser?.displayName || auth.currentUser?.email;
+
+  useEffect(() => {
+    const load = async () => {
+      setConfig(await fetchAppConfig());
+      fetchCards();
+      fetchDose();
+      fetchQuote();
+    };
+    load();
+  }, []);
+
+  const fetchCards = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, 'main_cards'));
+      setCards(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch {
+      Alert.alert('Error', 'Unable to load cards.');
+    }
+  };
+
+  const fetchDose = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, 'daily_dose'));
+      setDailyDose(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch {
+      Alert.alert('Error', 'Unable to load daily dose.');
+    }
+  };
+
+  const fetchQuote = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, 'quote'));
+      setQuote(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch {
+      Alert.alert('Error', 'Unable to load quote.');
+    }
+  };
+
+  if (!config) return <LoadingScreen />;
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <ScrollView style={[styles.container, { backgroundColor }]} contentContainerStyle={{ paddingBottom: 120 }}>
+      <HeaderSection config={config} displayName={displayName} textColor={textColor} />
+      <CategoryCardList cards={cards} theme={theme} textColor={textColor} buttonColor={buttonColor} />
+      <Text style={[styles.recommend, { color: textColor }]}>Daily Dose</Text>
+      <DailyDoseList doses={dailyDose} theme={theme} textColor={textColor} buttonColor={buttonColor} />
+      <QuoteSection quote={quote} theme={theme} textColor={textColor} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 80,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  recommend: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 28,
   },
 });

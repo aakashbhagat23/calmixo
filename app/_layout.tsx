@@ -1,39 +1,67 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import { Stack, Slot, useRouter } from "expo-router";
+import { useColorScheme, StatusBar } from "react-native";
+import { useEffect, useState } from "react";
+import type { TextStyle } from "react-native";
+import Colors from "@/constants/Colors";
+import * as SystemUI from "expo-system-ui";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  const theme = useColorScheme() || "light";
+  const router = useRouter();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
+    SystemUI.setBackgroundColorAsync(Colors[theme].headerBackground);
 
-  if (!loaded) {
-    return null;
-  }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsAuthenticated(true);
+        router.replace("/"); // Go to home inside tabs
+      } else {
+        setIsAuthenticated(false);
+        router.replace("/welcome"); // Unauthenticated
+      }
+    });
+
+    return unsubscribe;
+  }, [theme]);
+
+  const barStyle = theme === "dark" ? "light-content" : "dark-content";
+
+  const commonHeaderStyle = {
+    headerStyle: {
+      backgroundColor: Colors[theme].headerBackground,
+    },
+    headerTintColor: Colors[theme].text,
+    headerTitleStyle: {
+      fontWeight: "600" as TextStyle["fontWeight"],
+      fontSize: 18,
+    },
+  };
+
+  // While checking auth status
+  if (isAuthenticated === null) return null;
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <>
+      <StatusBar
+        backgroundColor={Colors[theme].headerBackground}
+        barStyle={barStyle}
+      />
+      {/* Stack Navigator only shown when not authenticated */}
+      {!isAuthenticated ? (
+        <Stack screenOptions={commonHeaderStyle}>
+          <Stack.Screen name="welcome" options={{ headerShown: false }} />
+          <Stack.Screen name="+not-found" options={{ title: "Oops Go Back!" }} />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+          <Stack.Screen name="register" options={{ headerShown: false }} />
+        </Stack>
+      ) : (
+        // Authenticated, render Tab layout
+        <Slot />
+      )}
+    </>
   );
 }

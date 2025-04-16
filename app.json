@@ -14,13 +14,18 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bhagatsuraj.calmixo",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#000000"
-      }
+      },
+      "package": "com.bhagatsuraj.calmixo"
     },
     "web": {
       "bundler": "metro",
@@ -41,6 +46,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "3d5ac1c5-b5f3-4a3b-b554-dc6ab4c80a26"
+      }
+    },
+    "owner": "bhagatsuraj"
   }
 }

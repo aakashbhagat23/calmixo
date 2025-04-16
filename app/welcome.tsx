@@ -17,7 +17,7 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>  {/* Updated to use backgroundColor */}
+    <View style={[styles.container, { backgroundColor }]}>
       <Image
         source={require('../assets/images/logo.png')}
         style={styles.logo}
@@ -28,7 +28,7 @@ export default function WelcomeScreen() {
         style={styles.image}
         resizeMode="contain"
       />
-      <Text style={[styles.title, { color: textColor }]}>Breathe In Peace,{'\n'} Breathe Out Stress.</Text>  {/* Updated to use textColor */}
+      <Text style={[styles.title, { color: textColor }]}>Breathe In Peace,{'\n'} Breathe Out Stress.</Text>  
 
 
 

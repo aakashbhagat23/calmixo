@@ -11,6 +11,7 @@ import CategoryCardList from '../../components/home/CategoryCardList';
 import DailyDoseList from '../../components/home/DailyDoseList';
 import QuoteSection from '../../components/home/QuoteSection';
 import Colors from '@/constants/Colors';
+import { clearCachedData, getCachedData, setCachedData } from '@/utils/cache';
 
 export default function HomeScreen() {
   const [config, setConfig] = useState<any>(null);
@@ -35,8 +36,20 @@ export default function HomeScreen() {
 
   const fetchCards = async () => {
     try {
-      const snapshot = await getDocs(collection(db, 'main_cards'));
-      setCards(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+			const cacheKey = 'main_cards';
+			const expiryTime = config?.refresh_time || 60 * 60 * 1000; // Default to 1 hour if not set in config
+			const cached = await getCachedData(cacheKey, expiryTime);
+			if(cached){
+				console.log('Using cached data for cards:', cached);
+				setCards(cached);
+			}else{
+				const snapshot = await getDocs(collection(db, cacheKey));
+				const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+				setCards(data);
+				setCachedData(cacheKey, data);
+				console.log('Fetched and cached new data for cards:', data);
+			}
+      
     } catch {
       Alert.alert('Error', 'Unable to load cards.');
     }
@@ -44,8 +57,19 @@ export default function HomeScreen() {
 
   const fetchDose = async () => {
     try {
-      const snapshot = await getDocs(collection(db, 'daily_dose'));
-      setDailyDose(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+			const key = 'daily_dose';
+			const expiryTime = config?.refresh_time || 60 * 60 * 1000;
+			const cached = await getCachedData(key, expiryTime);
+			if(cached){
+				console.log('Using cached data for daily_dose:', cached);
+				setDailyDose(cached);
+			}else{
+				const snapshot = await getDocs(collection(db, key));
+      	const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+				setDailyDose(data);
+				setCachedData(key, data);
+				console.log('Fetched and cached new data for daily_dose:', data);
+			}
     } catch {
       Alert.alert('Error', 'Unable to load daily dose.');
     }
@@ -53,8 +77,19 @@ export default function HomeScreen() {
 
   const fetchQuote = async () => {
     try {
-      const snapshot = await getDocs(collection(db, 'quote'));
-      setQuote(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+			const key = 'quote';
+			const expiryTime = config?.refresh_time || 60 * 60 * 1000;
+			const cached = await getCachedData(key, expiryTime);
+			if(cached){
+				console.log('Using cached data for quote:', cached);
+				setQuote(cached);
+			}else{
+				const snapshot = await getDocs(collection(db, key));
+      	const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+				setQuote(data);
+				setCachedData(key, data);
+				console.log('Fetched and cached new data for quote:', data);
+			}
     } catch {
       Alert.alert('Error', 'Unable to load quote.');
     }
